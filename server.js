@@ -124,6 +124,29 @@ app.get('/api/orders/:userId', (req, res) => {
     });
 });
 
+//  Get all registered users (excluding passwords for security!)
+app.get('/api/admin/users', (req, res) => {
+    db.all('SELECT id, username FROM users', [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+//  Get all orders across the entire platform
+app.get('/api/admin/orders', (req, res) => {
+    // We use a LEFT JOIN to combine the orders table with the users table
+    const query = `
+        SELECT orders.id, orders.total, orders.billing_address, users.username 
+        FROM orders 
+        LEFT JOIN users ON orders.user_id = users.id
+        ORDER BY orders.id DESC
+    `;
+    db.all(query, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
